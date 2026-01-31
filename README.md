@@ -1,211 +1,197 @@
-# Relationship Coach Simulator
+# Hang the DJ — Agentic Matchmaking Simulator
 
-A narrative simulation game where you play as a relationship therapist managing recurring clients while navigating your own dating life. An AI agent orchestrates client outcomes, tracks therapeutic relationships, and manages the consequences of your advice.
+An experimental **agentic application** that simulates dating intake, compatibility evaluation, and relationship dynamics using multiple LLM-powered agents, long-term memory, and MCP-style tools.
 
-## Core Concept
+This project was built as part of a course on agentic systems, with an emphasis on **ambition, architecture, and reasoning**, rather than production polish.
 
-You run a small relationship coaching practice with 3-5 recurring clients who come to you with real relationship dilemmas sourced from Reddit’s relationship advice communities. As their therapist, you provide guidance through dialogue choices, and the AI agent simulates outcomes based on the quality and nature of your advice. Clients remember everything you’ve told them, return with follow-up issues, and their trust in you evolves based on whether your guidance helps or harms them.
+---
 
-The game explores the tension between giving advice and living it - as a stretch goal, you’ll also navigate your own dating life with 1-2 potential partners, creating opportunities for hypocrisy, growth, and thematic resonance between your professional and personal worlds.
+## 🧠 Project Overview
 
-## Agent Architecture
+**Hang the DJ** is a multi-agent dating simulator inspired by agentic system design patterns.
 
-The LLM agent acts as the game master, managing multiple interconnected systems:
+The system consists of:
+- Multiple **LLM-based agents** with distinct roles
+- A **web UI** for live interaction and demonstration
+- A **FastAPI backend** for orchestration and simulation
+- **Long-term memory** via Letta
+- Several **MCP-style tools** that allow agents to act, not just talk
 
-- **Client State Management**: Tracks each client’s relationship history, past advice received, outcomes from following your guidance, trust levels, and therapeutic progress
-- **Outcome Simulation**: After each session, determines what happened when clients applied your advice - did their relationship improve, deteriorate, or remain unchanged?
-- **Memory & Continuity**: Maintains detailed session notes for each client, ensures they reference past conversations naturally, and creates realistic follow-up scenarios based on previous outcomes
-- **Relationship Dynamics**: Manages how clients’ trust in you evolves - successful advice builds rapport, harmful advice damages the therapeutic relationship, and clients may eventually terminate therapy or refer others based on their experience
+The goal is to explore how agents:
+- Gather and refine information over time  
+- Coordinate through structured tools  
+- Store and retrieve durable memory  
+- Produce explainable decisions rather than opaque outputs  
 
-The agent doesn’t just respond to your choices - it actively simulates a living practice where clients have ongoing lives between sessions.
+This is intentionally a **toy / research system**, not a real dating app.
 
-## Game Flow
+---
 
-### Session Structure
+## 🤖 Agents
 
-1. **Client Check-in**: A client arrives for their appointment (new client or returning)
-1. **Problem Presentation**: For new issues, the agent presents a scenario sourced from Reddit; for follow-ups, the agent reports outcomes from previous advice
-1. **Therapeutic Dialogue**: You engage through dialogue choices, ask questions, offer guidance
-1. **Advice Synthesis**: The session ends with your core recommendation
-1. **Agent Processing**: Between sessions, the agent simulates outcomes and prepares the next encounter
+The system contains **four agents** (three matchmakers + one evaluator):
 
-### Progression
+### Matchmaker Agents (A, B, C)
+Each matchmaker represents a single user and is responsible for:
+- Generating or incorporating **intake summaries**
+- Maintaining short-term contextual memory
+- Writing durable information to long-term memory (via tools)
 
-- Start with 2-3 clients, unlock more as your reputation grows
-- Clients can terminate therapy if repeatedly dissatisfied
-- Successful outcomes lead to referrals (new clients)
-- Build specialization based on which relationship issues you handle well
-- Track overall success rate and therapeutic approach (empathetic vs. direct, traditional vs. unconventional)
+### Neutral Evaluator (Agent #3)
+The evaluator:
+- Reads intake summaries from memory
+- Simulates date exchanges
+- Scores compatibility
+- Produces explainable reports and hypotheses about user pairs
 
-### Personal Life (Stretch Goal)
+> Note: The evaluator is called “Agent #3” for historical reasons — this was left unchanged intentionally.
 
-- Occasional dating scenarios with 1-2 potential partners between client sessions
-- Your romantic choices can contradict your professional advice, affecting your confidence and energy
-- Dates might ask about your work, creating moments where you reflect on your own advice
-- Lighter interaction system than client sessions - more focused on flavor and thematic contrast
+---
 
-## Features
+## 🧩 Architecture
 
-### Core Features
+### Frontend
+- **Next.js** web application
+- Used for:
+  - Running intake
+  - Triggering simulations
+  - Demonstrating agent outputs live
+- The UI is intentionally lightweight and demo-focused
 
-- **3-5 distinct recurring clients** with persistent memory across multiple sessions
-- **Reddit-sourced relationship dilemmas** provide authentic, varied initial scenarios
-- **Dynamic outcome simulation** where the agent determines consequences of your advice
-- **Evolving therapeutic relationships** - clients grow to trust you more or less based on your guidance
-- **Session history system** - detailed notes on every interaction, accessible during future sessions
-- **Multiple therapeutic approaches** - the game recognizes and tracks whether you lean empathetic, solution-focused, confrontational, etc.
+### Backend
+- **FastAPI** service
+- Responsibilities:
+  - Agent orchestration
+  - Simulation execution
+  - Tool routing
+  - Integration with Letta for long-term memory
 
-### Stretch Features
+---
 
-- **Personal dating subplot** with 1-2 romantic interests
-- **Cross-contamination** between professional advice and personal choices
-- **Reputation system** affecting which clients seek you out
-- **Ethical dilemmas** when clients’ situations challenge your values
-- **Client termination scenarios** when relationships break down beyond repair
+## 🧠 Memory Design
 
-## Technical Stack
+The system uses **two memory layers** by design:
 
-### Platform
+### 1. Local / In-Process Memory
+- Fast and lightweight
+- Used during live simulations for responsiveness
 
-- **macOS desktop application** built with Electron or Swift/SwiftUI (TBD based on development progress)
-- Native macOS look and feel with menu bar, notifications for “appointments”
+### 2. Letta Long-Term Memory
+- Durable across backend restarts
+- Used to demonstrate persistence and MCP tooling
+- Stores:
+  - Intake summaries
+  - Pair hypotheses
+  - Retrieved context for agent reasoning
 
-### UI Design
+This split is intentional:
 
-- **Session view**: Clean therapy office aesthetic - client profile on left, dialogue in center, session notes on right
-- **Client roster**: Overview of all clients, their current status, upcoming appointments
-- **History browser**: Searchable archive of past sessions
-- Text-based interface (no character portraits to avoid AI-generated art concerns)
+> Local memory keeps the UI responsive; Letta provides durability and tool orchestration.
 
-### Backend & Agent
+---
 
-- **LLM Integration**: Claude API for agent decision-making and dialogue generation
-- **State Management**: Local persistence for all client data, session history, and game progress
+## 🔧 MCP Tools
 
-### MCP Tools
+The project exposes several **MCP-style tools** — structured actions an agent can explicitly choose to invoke.
 
-1. **Reddit Content Fetcher**
+### Fully Implemented Tools
+- **store_intake_summary**
+  - Stores structured intake data in Letta
+- **retrieve_user_memory**
+  - Retrieves stored memory from Letta for agent use
 
-- Scrapes r/relationship_advice, r/relationships, r/AmITheAsshole for initial client scenarios
-- Filters for appropriate content (avoid extreme abuse, violence)
-- Tags posts by relationship type (romantic, family, friendship) and severity
-- Caches posts locally to avoid repeated API calls
+These tools demonstrate:
+- Explicit agent choice
+- Defined input/output schemas
+- Effects on the external world (persistent memory)
 
-1. **Client Database Manager**
+### Partially Implemented / Demonstrated Tools
+- **run_date_exchange**
+- **generate_pipeline_report**
+- **score_exchange**
 
-- Stores comprehensive client profiles: demographics, relationship history, personality traits
-- Tracks therapeutic relationship metrics: trust level, session count, satisfaction
-- Maintains advice history: what guidance was given, what outcomes occurred
-- Records client preferences and sensitivities learned over time
-- Supports queries like “get_client_history()” and “update_trust_level()”
+These tools exist conceptually and are wired through the backend, but were constrained during the demo due to token limitations.
 
-1. **Session Memory System**
+This tradeoff was intentional and discussed during presentation.
 
-- Searchable archive of all dialogue from every session
-- Vector database (ChromaDB or similar) for semantic search of past conversations
-- Enables queries like “what did Sarah say about communication in our third session?”
-- Allows agent to reference specific past moments naturally
-- Tags sessions by themes, emotions, breakthrough moments
+---
 
-1. **Outcome Simulator (Agent-Driven)**
+## 🧠 Long-Term Memory (Letta)
 
-- Not a traditional API but a structured MCP tool interface for the agent
-- Agent evaluates advice quality against relationship science principles
-- Simulates realistic outcomes with appropriate randomness (good advice can still fail, bad advice might accidentally work)
-- Generates follow-up scenarios based on outcomes
-- Determines if clients return, terminate therapy, or refer others
+Letta is used to demonstrate **true long-term memory**.
 
-### Additional Tools (Potential)
+Memory blocks include:
+- `intake_summary::<user_id>`
+- `pair_hypothesis::<user_a>::<user_b>`
+- Stored reports and exchange summaries
 
-1. **Calendar/Scheduling System** - Manages appointment timing, sends notifications
-1. **Sentiment Analyzer** - Tracks emotional tone of sessions, client distress levels
+Persistence was demonstrated by:
+- Writing memory via MCP tools
+- Restarting the backend
+- Retrieving memory from Letta
 
-## Development Approach
+Not all retrieval paths were fully stabilized under time constraints, but memory writes and reads were successfully demonstrated.
 
-Given the ambitious scope, development will leverage AI coding assistants (GitHub Copilot, Claude Code, or Cursor) to accelerate implementation, particularly for:
+---
 
-- UI scaffolding and macOS-specific features
-- MCP tool integration and API handling
-- State management and data persistence
-- Reddit API integration and content filtering
+## 🧪 Demo Flow
 
-### Phased Development
+A typical demo flow looks like:
 
-**Phase 1: Core Therapy Simulator (MVP)**
+1. Run intake for one or more users  
+2. Store intake summaries via MCP tools  
+3. Simulate a date exchange  
+4. Generate compatibility scores and reports  
+5. Retrieve stored memory to explain how conclusions evolved  
 
-- Basic UI with session view and client roster
-- Reddit API integration for initial scenarios
-- 2-3 clients with simple state tracking
-- Agent generates basic outcomes
-- Session memory stored in simple JSON
+---
 
-**Phase 2: Enhanced Memory & Continuity**
+## 🚧 Known Limitations
 
-- Implement vector database for semantic session search
-- Add comprehensive client database
-- Agent references past sessions naturally in dialogue
-- Trust/satisfaction metrics affect client behavior
+- Token constraints limited repeated evaluator runs
+- Some MCP tools are demonstrated conceptually rather than exhaustively
+- The streaming UI path was deprioritized to preserve system stability
+- Letta retrieval after backend restart was partially unstable under time pressure
 
-**Phase 3: Depth & Variety**
+These limitations were explicitly acknowledged and discussed during the demo.
 
-- Expand to 5 clients
-- More sophisticated outcome simulation
-- Client termination and referral mechanics
-- Multiple therapeutic approaches recognized
+---
 
-**Phase 4: Stretch Goals (Time Permitting)**
+## 🎓 Educational Focus
 
-- Personal dating subplot (1-2 characters)
-- Cross-contamination between professional and personal
-- Polish and additional content
+This project prioritizes:
+- Agentic architecture
+- Explicit tool usage
+- Reasoning transparency
+- Memory persistence
+- System design tradeoffs
 
-## Success Metrics
+It is intentionally **not optimized** for:
+- UX polish
+- Cost efficiency
+- Production deployment
 
-The project successfully demonstrates agentic AI capabilities if:
+---
 
-- Clients feel like they have genuine memory and continuity across sessions
-- Outcomes feel causally related to advice quality (not random)
-- The therapeutic relationships evolve in believable ways
-- Players face meaningful choices where different approaches yield different results
-- The memory system enables natural callbacks to past conversations
+## 🧠 Key Takeaway
 
-## Why This Project Works
+> This project demonstrates how agents can be designed to **reason, act, remember, and explain**, rather than simply generate text.
 
-**Demonstrates Agentic Capabilities:**
+---
 
-- Agent makes autonomous decisions (outcome simulation) rather than just responding
-- Complex state management across multiple relationship threads
-- Sophisticated memory requirements (semantic search, context-aware responses)
-- Emergent narrative from agent decisions combined with player choices
+## 🚀 Running the Project (Local)
 
-**Technically Ambitious:**
-
-- Integration with external API (Reddit)
-- Multiple MCP tools with distinct purposes
-- Persistent state and long-term memory
-- Native desktop application
-
-**Thematically Cohesive:**
-
-- The “relationship coach” framing naturally justifies the agent architecture
-- Memory is central to the experience (therapists must remember clients)
-- Explores interesting questions about advice, expertise, and personal vs. professional life
-
------
-
-## Repository Structure (Planned)
-
-```
-/src
-  /ui          # macOS desktop app interface
-  /agent       # LLM agent logic and prompt templates
-  /mcp_tools   # Individual MCP tool implementations
-  /data        # Client database, session archives
-/tests         # Unit tests for tools and agent logic
-/docs          # Additional documentation
-README.md      # This file
+### Backend
+```bash
+uvicorn app.main:app --reload
 ```
 
-## Getting Started (Post-Development)
+### Frontend
+```bash
+npm install
+npm run dev
+```
 
-Instructions for running the application will be added as development progresses.​​​​​​​​​​​​​​​​
+## Final Note
+
+This project was built iteratively with AI coding assistance and reflects real-world agentic system development: tradeoffs, partial integrations, and evolving architecture.
